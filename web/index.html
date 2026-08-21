@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>工单系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="empty">加载中…</div>
+  <script src="/static/js/auth.js"></script>
+  <script>
+    // 入口：已登录跳工单列表，未登录跳登录
+    if (Auth.isLoggedIn()) location.href = '/tickets';
+    else location.href = '/login';
+  </script>
+</body>
+</html>
