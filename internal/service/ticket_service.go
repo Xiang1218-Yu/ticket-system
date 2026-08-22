@@ -249,6 +249,9 @@ func (s *TicketService) List(f ListFilter) (*ListResult, error) {
 }
 
 // ListFor 返回当前用户有权看到的工单。管理员看全部，组长只看所属处理组。
+// 授权收敛原则：身份归属始终覆盖外来条件——组长的可见组恒为其所属组，
+// 客户端传入的 group 筛选一律忽略并强制收敛到 actor.Group，避免组长借 ?group=
+// 读取其他组数据。管理员不受组约束，保留其合理的筛选能力。
 func (s *TicketService) ListFor(actor Actor, f ListFilter) (*ListResult, error) {
 	if actor.IsAdmin() {
 		return s.List(f)
@@ -256,9 +259,7 @@ func (s *TicketService) ListFor(actor Actor, f ListFilter) (*ListResult, error) 
 	if !actor.IsHandler() || !actor.IsLeader || actor.Group == "" {
 		return nil, errors.New("无权查看所有工单")
 	}
-	if f.Group == "" {
-		f.Group = actor.Group
-	}
+	f.Group = actor.Group
 	return s.List(f)
 }
 
@@ -311,6 +312,8 @@ func (s *TicketService) Overdue(f ListFilter) (*ListResult, error) {
 }
 
 // OverdueFor 返回当前用户有权看到的超时工单。
+// 授权收敛原则同 ListFor：组长可见组恒为所属组，忽略客户端 group 筛选；
+// 管理员看全部并保留合理筛选。
 func (s *TicketService) OverdueFor(actor Actor, f ListFilter) (*ListResult, error) {
 	if actor.IsAdmin() {
 		return s.Overdue(f)
@@ -318,9 +321,7 @@ func (s *TicketService) OverdueFor(actor Actor, f ListFilter) (*ListResult, erro
 	if !actor.IsHandler() || !actor.IsLeader || actor.Group == "" {
 		return nil, errors.New("无权查看超时工单")
 	}
-	if f.Group == "" {
-		f.Group = actor.Group
-	}
+	f.Group = actor.Group
 	return s.Overdue(f)
 }
 

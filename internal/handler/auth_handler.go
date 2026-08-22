@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"ticket-system/internal/middleware"
 	"ticket-system/internal/model"
 	"ticket-system/internal/service"
 )
@@ -80,16 +79,11 @@ func userDTO(u *model.User) gin.H {
 }
 
 // currentUser 从上下文取出已认证用户。
+// 身份归属由中间件按数据库记录注入，handler 不得用查询参数改写；
+// 因此这里直接返回上下文中的用户，不再依据 ?group= 覆盖 Group。
 func currentUser(c *gin.Context) *model.User {
 	v, _ := c.Get("user")
 	u, _ := v.(*model.User)
-	if group, ok := c.Get(middleware.ContextGroup); ok {
-		if groupName, ok := group.(string); ok && groupName != "" {
-			copy := *u
-			copy.Group = groupName
-			return &copy
-		}
-	}
 	return u
 }
 

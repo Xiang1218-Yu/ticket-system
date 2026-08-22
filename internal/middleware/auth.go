@@ -38,9 +38,9 @@ func Auth(auth *service.AuthService) gin.HandlerFunc {
 		}
 		c.Set(ContextUserID, user.ID)
 		c.Set(ContextRole, user.Role)
-		if group := c.Query("group"); group != "" {
-			c.Set(ContextGroup, group)
-		}
+		// 身份归属来自数据库，绝不被查询参数覆盖；忽略一切 ?group= 输入，
+		// 否则任意登录用户可伪造所属组从而绕过组级授权（canViewTicket/Assign 等）。
+		c.Set(ContextGroup, user.Group)
 		c.Set("user", user) // 完整用户对象，供 handler/service 还原 Actor
 		c.Next()
 	}
