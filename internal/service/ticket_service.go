@@ -382,7 +382,8 @@ func (s *TicketService) UpdateStatus(id uint, actor Actor, to string) (*model.Ti
 		can = (t.AssigneeID != nil && *t.AssigneeID == actor.ID) ||
 			(t.Group == actor.Group && actor.IsLeader) || actor.IsAdmin()
 	case model.StatusClosed:
-		can = t.SubmitterID == actor.ID || actor.IsAdmin()
+		can = t.SubmitterID == actor.ID || actor.IsAdmin() ||
+			(t.Group == actor.Group && actor.IsLeader)
 	}
 	if !can {
 		return nil, errors.New("无权执行此状态变更")
@@ -397,12 +398,8 @@ func (s *TicketService) UpdateStatus(id uint, actor Actor, to string) (*model.Ti
 		if to == model.StatusClosed {
 			updates["closed_at"] = now
 		}
-		result := tx.Model(&model.Ticket{}).Where("id = ? AND status = ?", id, t.Status).Updates(updates)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected != 1 {
-			return errors.New("工单状态已被其他操作更新，请刷新后重试")
+		if err := s.ticketRepo.TransitionStatus(tx, id, updates); err != nil {
+			return err
 		}
 		return tx.Create(&model.Comment{
 			TicketID: id, UserID: actor.ID,

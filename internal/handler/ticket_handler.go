@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -183,7 +184,7 @@ func (h *TicketHandler) UpdateStatus(c *gin.Context) {
 	if !bindJSON(c, &req) {
 		return
 	}
-	t, err := h.ticket.UpdateStatus(pathID(c), actorFromUser(currentUser(c)), req.Status)
+	t, err := h.ticket.UpdateStatus(pathID(c), actorFromUser(currentUser(c)), strings.TrimSpace(strings.ToLower(req.Status)))
 	if err != nil {
 		fail(c, err)
 		return

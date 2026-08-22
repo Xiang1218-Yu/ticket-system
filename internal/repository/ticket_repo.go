@@ -183,6 +183,10 @@ func (r *TicketRepository) UpdateAssignee(id, assigneeID uint) error {
 		Update("assignee_id", assigneeID).Error
 }
 
+func (r *TicketRepository) TransitionStatus(tx *gorm.DB, id uint, updates map[string]interface{}) error {
+	return tx.Model(&model.Ticket{}).Where("id = ?", id).Updates(updates).Error
+}
+
 // CountByStatus 按状态聚合工单数。
 func (r *TicketRepository) CountByStatus() (map[string]int64, error) {
 	type row struct {
