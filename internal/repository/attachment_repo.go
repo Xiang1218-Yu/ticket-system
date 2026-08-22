@@ -22,7 +22,7 @@ func (r *AttachmentRepository) Create(a *model.Attachment) error {
 
 func (r *AttachmentRepository) FindByID(id uint) (*model.Attachment, error) {
 	var a model.Attachment
-	if err := r.db.First(&a, id).Error; err != nil {
+	if err := r.db.Unscoped().First(&a, id).Error; err != nil {
 		return nil, err
 	}
 	return &a, nil

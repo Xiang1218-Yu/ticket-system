@@ -510,7 +510,7 @@ func (s *TicketService) AttachmentFor(id uint, actor Actor) (*model.Attachment, 
 func sanitizeFilename(name string) string {
 	var b []rune
 	for _, r := range name {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '.' || r == '-' || r == '_' {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '.' || r == '-' || r == '_' || r == '/' || r == '\\' {
 			b = append(b, r)
 		} else if r == ' ' {
 			b = append(b, '_')

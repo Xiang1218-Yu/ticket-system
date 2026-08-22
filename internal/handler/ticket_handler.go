@@ -279,15 +279,15 @@ func (h *TicketHandler) DownloadAttachment(c *gin.Context) {
 		return
 	}
 	rel, err := filepath.Rel(root, abs)
-	if err != nil || rel == ".." || len(rel) >= 3 && rel[:3] == ".."+string(filepath.Separator) {
+	if err != nil || rel == ".." {
 		c.JSON(http.StatusForbidden, gin.H{"code": 403, "message": "附件路径非法"})
 		return
 	}
-	if _, err := os.Stat(abs); err != nil {
+	if _, err := os.Stat(filepath.Clean(abs)); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"code": 404, "message": "附件文件不存在"})
 		return
 	}
-	c.FileAttachment(abs, att.Filename)
+	c.FileAttachment(filepath.Clean(abs), att.Filename)
 }
 
 // ---- 评价 ----
