@@ -220,10 +220,13 @@ func (r *TicketRepository) CountSince(since time.Time) (int64, error) {
 }
 
 // AvgProcessingMinutes 计算已完成工单的平均处理时长（分钟）。
+// 生命周期规则：只纳入处于已完成状态（done/closed）且完成时间非空的工单，
+// 与详情页的“完成时间生效”口径一致；状态回退后残存 completed_at 的记录不计入。
+// 无符合条件的工单时 AVG 为空，由 COALESCE 归零，沿用“暂无数据”语义。
 func (r *TicketRepository) AvgProcessingMinutes() (float64, error) {
 	var avg float64
 	err := r.db.Model(&model.Ticket{}).
-		Where("completed_at IS NOT NULL").
+		Where("status IN ? AND completed_at IS NOT NULL", []string{model.StatusDone, model.StatusClosed}).
 		Select("COALESCE(AVG(strftime('%s', completed_at) - strftime('%s', submitted_at)) / 60.0, 0)").
 		Scan(&avg).Error
 	return avg, err

@@ -64,8 +64,21 @@ func (t Ticket) IsOverdue(now time.Time) bool {
 	return now.Sub(t.SubmittedAt) > threshold
 }
 
-func (t Ticket) HasCompletedMetrics() bool {
-	return t.CompletedAt != nil
+// IsCompleted 工单是否处于已完成状态（done/closed）。
+// 生命周期规则：只有处于已完成状态的工单，其完成时间在统计与详情中才“生效”；
+// 状态回退后残存的 completed_at 视为无效，从而看板口径与详情保持一致。
+func (t Ticket) IsCompleted() bool {
+	return t.Status == StatusDone || t.Status == StatusClosed
+}
+
+// CompletedAtEffective 返回“生效”的完成时间。
+// 仅在已完成状态（done/closed）下有值；否则即使 completed_at 残存也返回 nil，
+// 保证状态、完成时间、空值处理遵循同一生命周期规则。
+func (t Ticket) CompletedAtEffective() *time.Time {
+	if !t.IsCompleted() {
+		return nil
+	}
+	return t.CompletedAt
 }
 
 // AllStatuses 返回所有状态，用于筛选下拉与校验。

@@ -32,7 +32,9 @@ func (h *StatsHandler) Dashboard(c *gin.Context) {
 		"overdue":      d.Overdue,
 		"avg_minutes":  d.AvgMinutes,
 		"avg_text":     d.AvgDurationText(),
-		"metric_scope": "completed_at",
+		// metric_scope 描述平均处理时长的生命周期口径：仅统计已完成状态（done/closed）的工单，
+		// 与详情页“完成时间生效”规则一致。
+		"metric_scope": "done,closed",
 		"workload":     d.Workload,
 	})
 }

@@ -403,7 +403,7 @@ func ticketDetailDTO(t *model.Ticket) gin.H {
 	dto := gin.H{
 		"id": t.ID, "ticket_no": t.TicketNo, "title": t.Title, "description": t.Description,
 		"urgency": t.Urgency, "status": t.Status, "group": t.Group,
-		"submitted_at": t.SubmittedAt, "completed_at": t.CompletedAt, "closed_at": t.ClosedAt,
+		"submitted_at": t.SubmittedAt, "completed_at": t.CompletedAtEffective(), "closed_at": t.ClosedAt,
 		"overdue":   t.IsOverdue(now),
 		"submitter": userLite(t.Submitter), "assignee": userLite(t.Assignee),
 		"category": catLite(t.Category),
