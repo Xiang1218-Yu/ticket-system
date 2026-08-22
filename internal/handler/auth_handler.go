@@ -57,7 +57,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		fail(c, err)
 		return
 	}
-	ok(c, gin.H{"token": token, "user": userDTO(u)})
+	ok(c, loginPayload(token, u))
+}
+
+func loginPayload(token string, u *model.User) gin.H {
+	return gin.H{"token": token, "token_type": "Bearer", "user": userDTO(u)}
 }
 
 // Me 返回当前登录用户。

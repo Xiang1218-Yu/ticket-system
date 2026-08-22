@@ -24,7 +24,7 @@ func Auth(auth *service.AuthService) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "未登录"})
 			return
 		}
-		tokenStr := strings.TrimPrefix(header, "Bearer ")
+		tokenStr := normalizeTokenHeader(header)
 		claims, err := auth.ParseToken(tokenStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "登录已失效"})
@@ -40,6 +40,10 @@ func Auth(auth *service.AuthService) gin.HandlerFunc {
 		c.Set("user", user) // 完整用户对象，供 handler/service 还原 Actor
 		c.Next()
 	}
+}
+
+func normalizeTokenHeader(header string) string {
+	return strings.TrimSpace(strings.TrimPrefix(header, "Bearer "))
 }
 
 // RequireRole 要求当前用户属于指定角色之一。

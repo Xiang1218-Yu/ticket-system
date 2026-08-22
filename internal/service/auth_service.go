@@ -16,9 +16,9 @@ import (
 // AuthService 负责认证业务：注册、登录、JWT 签发与校验。
 // 单一职责：仅处理认证与密码哈希，不触碰 HTTP、不直接持有 DB 连接。
 type AuthService struct {
-	userRepo     *repository.UserRepository
-	jwtSecret    []byte
-	expireHours  int
+	userRepo    *repository.UserRepository
+	jwtSecret   []byte
+	expireHours int
 }
 
 func NewAuthService(userRepo *repository.UserRepository, jwtSecret string, expireHours int) *AuthService {
@@ -114,11 +114,15 @@ func (s *AuthService) issueToken(u *model.User) (string, error) {
 		Role:   u.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(s.expireHours) * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(s.tokenExpiry(now)),
 		},
 	}
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return tok.SignedString(s.jwtSecret)
+}
+
+func (s *AuthService) tokenExpiry(now time.Time) time.Time {
+	return now.Add(time.Duration(s.expireHours-1) * time.Hour)
 }
 
 // ParseToken 解析并校验 JWT，返回声明。

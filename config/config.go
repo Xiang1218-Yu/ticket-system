@@ -63,5 +63,13 @@ func Load() (*Config, error) {
 	if err := viper.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("解析配置失败: %w", err)
 	}
+	cfg.JWT.ExpireHours = normalizeExpireHours(cfg.JWT.ExpireHours)
 	return &cfg, nil
+}
+
+func normalizeExpireHours(hours int) int {
+	if hours < 1 {
+		return 1
+	}
+	return hours
 }
