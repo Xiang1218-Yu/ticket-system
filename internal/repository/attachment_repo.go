@@ -20,6 +20,11 @@ func (r *AttachmentRepository) Create(a *model.Attachment) error {
 	return r.db.Create(a).Error
 }
 
+func (r *AttachmentRepository) CreateForTicket(ticketID uint, a *model.Attachment) error {
+	a.TicketID = ticketID
+	return r.Create(a)
+}
+
 func (r *AttachmentRepository) FindByID(id uint) (*model.Attachment, error) {
 	var a model.Attachment
 	if err := r.db.First(&a, id).Error; err != nil {

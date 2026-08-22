@@ -258,7 +258,7 @@ func (h *TicketHandler) AddAttachment(c *gin.Context) {
 		fail(c, err)
 		return
 	}
-	created(c, gin.H{"filename": file.Filename, "path": rel, "size": file.Size})
+	created(c, gin.H{"filename": file.Filename, "path": rel, "size": file.Size, "ticket_id": id})
 }
 
 func (h *TicketHandler) DownloadAttachment(c *gin.Context) {

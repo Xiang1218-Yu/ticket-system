@@ -466,8 +466,8 @@ func (s *TicketService) SaveUpload(filename string, data []byte) (string, error)
 
 // AddAttachment 为已有工单补传附件（兼容内部调用）。
 func (s *TicketService) AddAttachment(ticketID uint, att SavedAttachment) error {
-	return s.attRepo.Create(&model.Attachment{
-		TicketID: ticketID, Filename: att.Filename, FilePath: att.Path, FileSize: att.Size,
+	return s.attRepo.CreateForTicket(ticketID, &model.Attachment{
+		Filename: att.Filename, FilePath: att.Path, FileSize: att.Size,
 	})
 }
 
@@ -480,7 +480,7 @@ func (s *TicketService) AddAttachmentFor(ticketID uint, actor Actor, att SavedAt
 	if !canViewTicket(t, actor) {
 		return errors.New("无权在此工单添加附件")
 	}
-	if t.Status == model.StatusClosed {
+	if !model.CanAppendToTicket(t.Status) {
 		return errors.New("工单已关闭，不可添加附件")
 	}
 	if att.Filename == "" || att.Path == "" {
