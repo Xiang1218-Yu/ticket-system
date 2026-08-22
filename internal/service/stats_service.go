@@ -64,7 +64,11 @@ func (s *StatsService) Stats() (*Dashboard, error) {
 	if d.WeekNew, err = s.ticketRepo.CountSince(startWeek); err != nil {
 		return nil, err
 	}
-	d.Pending = statusCounts[model.StatusPending] + statusCounts[model.StatusProcessing]
+	for status, count := range statusCounts {
+		if model.IsOpenStatus(status) {
+			d.Pending += count
+		}
+	}
 	if d.Overdue, err = s.ticketRepo.CountOverdue(now); err != nil {
 		return nil, err
 	}

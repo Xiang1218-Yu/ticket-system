@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
+	"ticket-system/internal/model"
 	"ticket-system/internal/service"
 )
 
@@ -24,14 +25,15 @@ func (h *StatsHandler) Dashboard(c *gin.Context) {
 		return
 	}
 	ok(c, gin.H{
-		"by_category": d.ByCategory,
-		"by_status":   d.ByStatus,
-		"today_new":   d.TodayNew,
-		"week_new":    d.WeekNew,
-		"pending":     d.Pending,
-		"overdue":     d.Overdue,
-		"avg_minutes": d.AvgMinutes,
-		"avg_text":    d.AvgDurationText(),
-		"workload":    d.Workload,
+		"by_category":   d.ByCategory,
+		"by_status":     d.ByStatus,
+		"today_new":     d.TodayNew,
+		"week_new":      d.WeekNew,
+		"pending":       d.Pending,
+		"overdue":       d.Overdue,
+		"avg_minutes":   d.AvgMinutes,
+		"avg_text":      d.AvgDurationText(),
+		"workload":      d.Workload,
+		"open_statuses": []string{model.StatusPending, model.StatusProcessing},
 	})
 }

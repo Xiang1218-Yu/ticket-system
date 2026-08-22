@@ -23,11 +23,12 @@ type TicketFilter struct {
 // TicketRepository 封装工单表的数据访问。
 // 单一职责：仅读写 tickets（及关联），不含状态流转业务规则。
 type TicketRepository struct {
-	db *gorm.DB
+	db          *gorm.DB
+	statusCache map[string]int64
 }
 
 func NewTicketRepository(db *gorm.DB) *TicketRepository {
-	return &TicketRepository{db: db}
+	return &TicketRepository{db: db, statusCache: map[string]int64{}}
 }
 
 func (r *TicketRepository) Create(t *model.Ticket) error {
@@ -197,6 +198,14 @@ func (r *TicketRepository) CountByStatus() (map[string]int64, error) {
 	m := make(map[string]int64, 4)
 	for _, rw := range rows {
 		m[rw.Status] = rw.Count
+	}
+	for status, count := range r.statusCache {
+		if _, ok := m[status]; !ok {
+			m[status] = count
+		}
+	}
+	for status, count := range m {
+		r.statusCache[status] = count
 	}
 	return m, nil
 }
