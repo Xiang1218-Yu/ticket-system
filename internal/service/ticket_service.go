@@ -373,7 +373,8 @@ func (s *TicketService) UpdateStatus(id uint, actor Actor, to string) (*model.Ti
 	if !model.LegalTransition(t.Status, to) {
 		return nil, fmt.Errorf("不允许从 %s 迁移到 %s", t.Status, to)
 	}
-	// 权限：接单需指派给该处理人；完成需指派处理人/组长/管理员；关闭需提交人或管理员。
+	// 权限（各角色原有权限保持不变）：接单需指派给该处理人/管理员；
+	// 完成需指派处理人/所属组组长/管理员；关闭需提交人/所属组组长/管理员。
 	can := false
 	switch to {
 	case model.StatusProcessing:
@@ -397,8 +398,18 @@ func (s *TicketService) UpdateStatus(id uint, actor Actor, to string) (*model.Ti
 		}
 		if to == model.StatusClosed {
 			updates["closed_at"] = now
+			// 关闭必须经由"已完成"而来；completed_at 理论上已存在。
+			// 但若历史数据或并发竞态导致其为空，则补齐为关闭时刻，
+			// 使状态、时间线、完成时间、关闭时间与统计口径一致
+			// （平均处理时长按 completed_at 计算，否则会遗漏该工单）。
+			if t.CompletedAt == nil {
+				updates["completed_at"] = now
+			}
 		}
-		if err := s.ticketRepo.TransitionStatus(tx, id, updates); err != nil {
+		// 期望旧状态为读取时的 t.Status：仅当数据库当前状态未被并发改动时才推进，
+		// 命中 0 行则说明期间有并发推进，由仓库返回 ErrConcurrentTransition，
+		// 避免双方互相覆盖留下矛盾记录。
+		if err := s.ticketRepo.TransitionStatus(tx, id, t.Status, updates); err != nil {
 			return err
 		}
 		return tx.Create(&model.Comment{

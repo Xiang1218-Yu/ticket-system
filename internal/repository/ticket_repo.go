@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"ticket-system/internal/model"
@@ -183,8 +184,26 @@ func (r *TicketRepository) UpdateAssignee(id, assigneeID uint) error {
 		Update("assignee_id", assigneeID).Error
 }
 
-func (r *TicketRepository) TransitionStatus(tx *gorm.DB, id uint, updates map[string]interface{}) error {
-	return tx.Model(&model.Ticket{}).Where("id = ?", id).Updates(updates).Error
+// ErrConcurrentTransition 表示在读取工单与本事务提交之间，
+// 工单状态被并发推进过，本次推进必须重试或放弃。
+// 通过 Where 同时校验 id 与预期旧状态实现乐观锁。
+var ErrConcurrentTransition = errors.New("工单状态已被并发更新，请刷新后重试")
+
+// TransitionStatus 在校验旧状态未变的前提下推进工单状态。
+// 期望旧状态 expectFrom 由调用方在读取后传入：仅当当前 status 仍为 expectFrom 时，
+// 才写入 updates。并发推进的双方只有一个能命中该条件，
+// 另一方受 RowsAffected=0 指示为冲突，避免互相覆盖留下矛盾记录。
+func (r *TicketRepository) TransitionStatus(tx *gorm.DB, id uint, expectFrom string, updates map[string]interface{}) error {
+	res := tx.Model(&model.Ticket{}).
+		Where("id = ? AND status = ?", id, expectFrom).
+		Updates(updates)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return ErrConcurrentTransition
+	}
+	return nil
 }
 
 // CountByStatus 按状态聚合工单数。

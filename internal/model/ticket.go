@@ -70,11 +70,14 @@ func AllStatuses() []string {
 }
 
 // LegalTransition 判断状态迁移是否合法。
-// 提交→待处理→处理中→已完成→已关闭 的单向流转。
+// 严格单向流转：待处理 → 处理中 → 已完成 → 已关闭。
+// 处理中不允许直接关闭，必须先经"已完成"再"已关闭"，
+// 否则会出现 completed_at 为空却已关闭的矛盾记录，
+// 也会让按 completed_at 计算的平均处理时长统计遗漏这些工单。
 func LegalTransition(from, to string) bool {
 	allowed := map[string][]string{
 		StatusPending:    {StatusProcessing},
-		StatusProcessing: {StatusDone, StatusClosed},
+		StatusProcessing: {StatusDone},
 		StatusDone:       {StatusClosed},
 		StatusClosed:     {},
 	}
