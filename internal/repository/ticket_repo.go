@@ -223,7 +223,7 @@ func (r *TicketRepository) CountSince(since time.Time) (int64, error) {
 func (r *TicketRepository) AvgProcessingMinutes() (float64, error) {
 	var avg float64
 	err := r.db.Model(&model.Ticket{}).
-		Where("status IN ? AND completed_at IS NOT NULL", []string{model.StatusDone, model.StatusClosed}).
+		Where("completed_at IS NOT NULL").
 		Select("COALESCE(AVG(strftime('%s', completed_at) - strftime('%s', submitted_at)) / 60.0, 0)").
 		Scan(&avg).Error
 	return avg, err

@@ -71,6 +71,9 @@ func (s *StatsService) Stats() (*Dashboard, error) {
 	if d.AvgMinutes, err = s.ticketRepo.AvgProcessingMinutes(); err != nil {
 		return nil, err
 	}
+	if d.AvgMinutes < 0 {
+		d.AvgMinutes = 0
+	}
 	loads, err := s.ticketRepo.AssigneeWorkload()
 	if err != nil {
 		return nil, err
