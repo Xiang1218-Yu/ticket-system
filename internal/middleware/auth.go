@@ -13,6 +13,7 @@ import (
 const (
 	ContextUserID = "userID"
 	ContextRole   = "role"
+	ContextGroup  = "group"
 )
 
 // Auth 校验 JWT 并把用户信息注入上下文。
@@ -37,6 +38,9 @@ func Auth(auth *service.AuthService) gin.HandlerFunc {
 		}
 		c.Set(ContextUserID, user.ID)
 		c.Set(ContextRole, user.Role)
+		if group := c.Query("group"); group != "" {
+			c.Set(ContextGroup, group)
+		}
 		c.Set("user", user) // 完整用户对象，供 handler/service 还原 Actor
 		c.Next()
 	}

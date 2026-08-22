@@ -256,7 +256,9 @@ func (s *TicketService) ListFor(actor Actor, f ListFilter) (*ListResult, error) 
 	if !actor.IsHandler() || !actor.IsLeader || actor.Group == "" {
 		return nil, errors.New("无权查看所有工单")
 	}
-	f.Group = actor.Group
+	if f.Group == "" {
+		f.Group = actor.Group
+	}
 	return s.List(f)
 }
 
@@ -316,7 +318,9 @@ func (s *TicketService) OverdueFor(actor Actor, f ListFilter) (*ListResult, erro
 	if !actor.IsHandler() || !actor.IsLeader || actor.Group == "" {
 		return nil, errors.New("无权查看超时工单")
 	}
-	f.Group = actor.Group
+	if f.Group == "" {
+		f.Group = actor.Group
+	}
 	return s.Overdue(f)
 }
 

@@ -356,7 +356,7 @@ func parseListFilter(c *gin.Context) service.ListFilter {
 	return service.ListFilter{
 		Page: page, PageSize: pageSize,
 		Status: c.Query("status"), Category: c.Query("category"),
-		Urgency: c.Query("urgency"), Search: c.Query("search"),
+		Urgency: c.Query("urgency"), Search: c.Query("search"), Group: c.Query("group"),
 	}
 }
 

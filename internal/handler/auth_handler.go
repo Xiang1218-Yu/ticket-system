@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
+	"ticket-system/internal/middleware"
 	"ticket-system/internal/model"
 	"ticket-system/internal/service"
 )
@@ -82,6 +83,13 @@ func userDTO(u *model.User) gin.H {
 func currentUser(c *gin.Context) *model.User {
 	v, _ := c.Get("user")
 	u, _ := v.(*model.User)
+	if group, ok := c.Get(middleware.ContextGroup); ok {
+		if groupName, ok := group.(string); ok && groupName != "" {
+			copy := *u
+			copy.Group = groupName
+			return &copy
+		}
+	}
 	return u
 }
 
