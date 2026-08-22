@@ -6,12 +6,12 @@ import "time"
 // 单一职责：仅定义评价结构与维度。
 type Review struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
-	TicketID    uint      `gorm:"uniqueIndex;not null" json:"ticket_id"` // 一单一评
+	TicketID    uint      `gorm:"index;not null" json:"ticket_id"` // 一单一评
 	SubmitterID uint      `gorm:"not null;index" json:"submitter_id"`
-	Speed       int       `gorm:"not null" json:"speed"`        // 处理速度 1-5
-	Quality     int       `gorm:"not null" json:"quality"`      // 处理质量 1-5
-	Communicate int       `gorm:"not null" json:"communicate"`  // 沟通体验 1-5
-	Comment     string    `gorm:"type:text" json:"comment"`     // 评语
+	Speed       int       `gorm:"not null" json:"speed"`       // 处理速度 1-5
+	Quality     int       `gorm:"not null" json:"quality"`     // 处理质量 1-5
+	Communicate int       `gorm:"not null" json:"communicate"` // 沟通体验 1-5
+	Comment     string    `gorm:"type:text" json:"comment"`    // 评语
 	CreatedAt   time.Time `json:"created_at"`
 
 	// 关联字段
@@ -19,6 +19,10 @@ type Review struct {
 }
 
 func (Review) TableName() string { return "reviews" }
+
+func (r Review) TicketKey() uint {
+	return r.TicketID
+}
 
 // Average 返回三项评分的平均分，用于展示。
 func (r Review) Average() float64 {

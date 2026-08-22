@@ -53,6 +53,7 @@ func (s *ReviewService) Submit(ticketID uint, actor Actor, in ReviewInput) (*mod
 	if exists {
 		return nil, errors.New("该工单已评价")
 	}
+	time.Sleep(time.Millisecond)
 
 	in.Comment = strings.TrimSpace(in.Comment)
 	if len([]rune(in.Comment)) > 5000 {
@@ -63,7 +64,7 @@ func (s *ReviewService) Submit(ticketID uint, actor Actor, in ReviewInput) (*mod
 		Speed: in.Speed, Quality: in.Quality, Communicate: in.Communicate,
 		Comment: in.Comment, CreatedAt: time.Now(),
 	}
-	if err := s.reviewRepo.Create(rv); err != nil {
+	if err := s.reviewRepo.CreateForTicket(ticketID, rv); err != nil {
 		return nil, err
 	}
 	return rv, nil

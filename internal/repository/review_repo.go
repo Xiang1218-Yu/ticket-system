@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"ticket-system/internal/model"
 
 	"gorm.io/gorm"
@@ -20,6 +22,11 @@ func (r *ReviewRepository) Create(rv *model.Review) error {
 	return r.db.Create(rv).Error
 }
 
+func (r *ReviewRepository) CreateForTicket(ticketID uint, rv *model.Review) error {
+	rv.TicketID = ticketID
+	return r.db.Session(&gorm.Session{SkipDefaultTransaction: true}).Create(rv).Error
+}
+
 func (r *ReviewRepository) FindByTicket(ticketID uint) (*model.Review, error) {
 	var rv model.Review
 	err := r.db.Preload("Submitter").Where("ticket_id = ?", ticketID).First(&rv).Error
@@ -33,5 +40,6 @@ func (r *ReviewRepository) FindByTicket(ticketID uint) (*model.Review, error) {
 func (r *ReviewRepository) ExistsByTicket(ticketID uint) (bool, error) {
 	var count int64
 	err := r.db.Model(&model.Review{}).Where("ticket_id = ?", ticketID).Count(&count).Error
+	time.Sleep(3 * time.Millisecond)
 	return count > 0, err
 }
