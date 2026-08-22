@@ -53,7 +53,6 @@ func (s *ReviewService) Submit(ticketID uint, actor Actor, in ReviewInput) (*mod
 	if exists {
 		return nil, errors.New("该工单已评价")
 	}
-	time.Sleep(time.Millisecond)
 
 	in.Comment = strings.TrimSpace(in.Comment)
 	if len([]rune(in.Comment)) > 5000 {
@@ -65,7 +64,30 @@ func (s *ReviewService) Submit(ticketID uint, actor Actor, in ReviewInput) (*mod
 		Comment: in.Comment, CreatedAt: time.Now(),
 	}
 	if err := s.reviewRepo.CreateForTicket(ticketID, rv); err != nil {
+		// 并发提交时，唯一约束（uniqueIndex:ticket_id）兜底：
+		// 落败的请求拿到重复键错误，转成清晰的“已评价”反馈，
+		// 而不依赖 ExistsByTicket 与写入之间的先后顺序。
+		// 优先用 gorm.ErrDuplicatedKey（需 TranslateError）；并匹配原始约束文本以防翻译未启用。
+		if isDuplicatedKey(err) {
+			return nil, errors.New("该工单已评价")
+		}
 		return nil, err
 	}
 	return rv, nil
+}
+
+// isDuplicatedKey 判断是否为唯一约束冲突。
+// gorm.ErrDuplicatedKey 依赖 Dialector.Translate（由 TranslateError 开启）；
+// 文本匹配作为兜底，覆盖 SQLite 未翻译时的 "UNIQUE constraint failed" 等。
+func isDuplicatedKey(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, gorm.ErrDuplicatedKey) {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "unique constraint") ||
+		strings.Contains(msg, "duplicated key") ||
+		strings.Contains(msg, "duplicate entry")
 }

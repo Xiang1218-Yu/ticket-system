@@ -6,7 +6,7 @@ import "time"
 // 单一职责：仅定义评价结构与维度。
 type Review struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
-	TicketID    uint      `gorm:"index;not null" json:"ticket_id"` // 一单一评
+	TicketID    uint      `gorm:"uniqueIndex;not null" json:"ticket_id"` // 一单一评，DB 层唯一约束兜底并发
 	SubmitterID uint      `gorm:"not null;index" json:"submitter_id"`
 	Speed       int       `gorm:"not null" json:"speed"`       // 处理速度 1-5
 	Quality     int       `gorm:"not null" json:"quality"`     // 处理质量 1-5

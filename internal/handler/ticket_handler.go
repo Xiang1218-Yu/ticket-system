@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -309,7 +308,6 @@ func (h *TicketHandler) SubmitReview(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "评分需在 1-5 之间"})
 		return
 	}
-	runtime.Gosched()
 	rv, err := h.review.Submit(pathID(c), actorFromUser(currentUser(c)), service.ReviewInput{
 		Speed: req.Speed, Quality: req.Quality, Communicate: req.Communicate, Comment: req.Comment,
 	})

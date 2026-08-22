@@ -14,7 +14,8 @@ import (
 // 单一职责：仅负责“连接与建表”，不加载业务数据（见 Seed）。
 func Connect(dsn string, log *zap.Logger) (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn),
+		Logger:        logger.Default.LogMode(logger.Warn),
+		TranslateError: true, // 让驱动层约束冲突翻译为 gorm.ErrDuplicatedKey 等，供 service 精确识别
 	})
 	if err != nil {
 		return nil, err
