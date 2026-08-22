@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>注册 - 工单系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="container" style="max-width:440px; margin-top:40px;">
+    <div class="card">
+      <h2 class="card-title">注册</h2>
+      <form id="regForm">
+        <div class="form-group">
+          <label>用户名</label>
+          <input class="form-control" name="username" required />
+        </div>
+        <div class="form-group">
+          <label>姓名</label>
+          <input class="form-control" name="name" required />
+        </div>
+        <div class="form-group">
+          <label>密码（至少6位）</label>
+          <input class="form-control" type="password" name="password" required minlength="6" />
+        </div>
+        <div class="form-group">
+          <label>角色</label>
+          <select class="form-control" name="role" id="role">
+            <option value="employee">普通员工</option>
+            <option value="handler">处理人</option>
+          </select>
+        </div>
+        <div class="form-group" id="groupField" style="display:none;">
+          <label>所属处理组</label>
+          <select class="form-control" name="group" id="group">
+            <option value="IT组">IT组</option>
+            <option value="行政组">行政组</option>
+            <option value="人事组">人事组</option>
+            <option value="后勤组">后勤组</option>
+          </select>
+        </div>
+        <button class="btn" type="submit" style="width:100%;">注册</button>
+      </form>
+      <p style="margin-top:16px; text-align:center; font-size:14px;">
+        已有账号？<a href="/login">登录</a>
+      </p>
+    </div>
+  </div>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/ui.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/pages/register.js"></script>
+</body>
+</html>
