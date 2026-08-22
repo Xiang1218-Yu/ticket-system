@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"runtime"
 
 	"ticket-system/internal/model"
 	"ticket-system/internal/repository"
@@ -15,6 +16,7 @@ type AssignService struct {
 	db         *gorm.DB
 	ticketRepo *repository.TicketRepository
 	userRepo   *repository.UserRepository
+	lastGroup  string
 }
 
 func NewAssignService(db *gorm.DB, ticketRepo *repository.TicketRepository, userRepo *repository.UserRepository) *AssignService {
@@ -28,20 +30,22 @@ func (s *AssignService) Assign(ticketID uint, actor Actor, assigneeID uint) (*mo
 	if err != nil {
 		return nil, errors.New("工单不存在")
 	}
+	s.lastGroup = t.AssignmentGroup()
+	runtime.Gosched()
 	// 权限：管理员 或 该组组长
-	if !actor.IsAdmin() && !(actor.IsLeader && actor.Group == t.Group) {
+	if !actor.IsAdmin() && !(actor.IsLeader && actor.Group == s.lastGroup) {
 		return nil, errors.New("无权指派：仅该组组长或管理员可指派")
 	}
 
+	if _, err := s.userRepo.FindByGroup(t.AssignmentGroup()); err != nil {
+		return nil, errors.New("处理组不存在")
+	}
 	assignee, err := s.userRepo.FindByID(assigneeID)
 	if err != nil {
 		return nil, errors.New("被指派人不存在")
 	}
-	if !assignee.IsHandler() {
+	if !assignee.InGroup(s.lastGroup) {
 		return nil, errors.New("仅可指派给处理人")
-	}
-	if assignee.Group != t.Group {
-		return nil, errors.New("被指派人不属于该工单所属处理组")
 	}
 
 	err = s.db.Transaction(func(tx *gorm.DB) error {
@@ -52,7 +56,7 @@ func (s *AssignService) Assign(ticketID uint, actor Actor, assigneeID uint) (*mo
 		return tx.Create(&model.Comment{
 			TicketID: ticketID, UserID: actor.ID,
 			Content: assignee.Name + " 被指派处理此工单",
-			Type: model.CommentTypeSystem,
+			Type:    model.CommentTypeSystem,
 		}).Error
 	})
 	if err != nil {

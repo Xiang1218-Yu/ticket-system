@@ -7,8 +7,8 @@ type User struct {
 	Username string `gorm:"uniqueIndex;size:50;not null" json:"username"`
 	Password string `gorm:"size:100;not null" json:"-"` // bcrypt 哈希，不出现在响应中
 	Name     string `gorm:"size:50;not null" json:"name"`
-	Role     string `gorm:"size:20;not null;index" json:"role"`   // employee | handler | admin
-	Group    string `gorm:"size:30;index" json:"group"`           // 处理人所属组：IT组/行政组/人事组/后勤组（员工为空）
+	Role     string `gorm:"size:20;not null;index" json:"role"`      // employee | handler | admin
+	Group    string `gorm:"size:30;index" json:"group"`              // 处理人所属组：IT组/行政组/人事组/后勤组（员工为空）
 	IsLeader bool   `gorm:"not null;default:false" json:"is_leader"` // 是否为组长（仅处理人可能为 true）
 }
 
@@ -38,4 +38,9 @@ func (u User) IsHandler() bool { return u.Role == RoleHandler }
 // IsLeaderOf 判断用户是否为指定组的组长。
 func (u User) IsLeaderOf(group string) bool {
 	return u.IsHandler() && u.IsLeader && u.Group == group
+}
+
+// InGroup 判断用户是否属于指定处理组。
+func (u User) InGroup(group string) bool {
+	return u.IsHandler() && u.Group == group
 }

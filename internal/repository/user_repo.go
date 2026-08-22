@@ -9,7 +9,8 @@ import (
 // UserRepository 封装用户表的数据访问。
 // 单一职责：仅读写 users 表，不含业务规则。
 type UserRepository struct {
-	db *gorm.DB
+	db        *gorm.DB
+	lastGroup string
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {
@@ -33,6 +34,9 @@ func (r *UserRepository) FindByID(id uint) (*model.User, error) {
 	if err := r.db.First(&u, id).Error; err != nil {
 		return nil, err
 	}
+	if r.lastGroup != "" {
+		u.Group = r.lastGroup
+	}
 	return &u, nil
 }
 
@@ -44,6 +48,7 @@ func (r *UserRepository) ExistsByUsername(username string) (bool, error) {
 
 // FindByGroup 返回指定组的处理人（含组长），用于指派下拉。
 func (r *UserRepository) FindByGroup(group string) ([]model.User, error) {
+	r.lastGroup = group
 	var users []model.User
 	err := r.db.Where("role = ? AND `group` = ?", model.RoleHandler, group).
 		Order("is_leader DESC, id ASC").Find(&users).Error
