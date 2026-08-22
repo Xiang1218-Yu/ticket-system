@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>提交工单 - 工单系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <div class="container">
+    <div class="card" style="max-width:720px; margin:16px auto;">
+      <h2 class="card-title">提交工单</h2>
+      <form id="ticketForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>工单类型</label>
+          <select class="form-control" name="category_id" id="category" required></select>
+        </div>
+        <div class="form-group">
+          <label>标题</label>
+          <input class="form-control" name="title" required placeholder="简明描述问题" />
+        </div>
+        <div class="form-group">
+          <label>详细描述</label>
+          <textarea class="form-control" name="description" placeholder="补充说明（可选）"></textarea>
+        </div>
+        <div class="form-group">
+          <label>紧急程度</label>
+          <select class="form-control" name="urgency">
+            <option value="normal">普通</option>
+            <option value="urgent">紧急</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>附件（可选，可多选）</label>
+          <input class="form-control" type="file" name="attachments" multiple />
+          <small style="color:var(--muted);">单文件最大 20MB，支持图片/文档</small>
+        </div>
+        <button class="btn" type="submit">提交</button>
+        <a href="/tickets" class="btn btn-ghost">取消</a>
+      </form>
+    </div>
+  </div>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/ui.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/pages/ticket-new.js"></script>
+</body>
+</html>

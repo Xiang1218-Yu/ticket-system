@@ -1,0 +1,20 @@
+server:
+  port: 8080
+  mode: debug                 # gin 模式：debug / release
+
+database:
+  driver: sqlite              # sqlite
+  dsn: "ticket.db"            # 纯 Go 驱动，无需 cgo
+
+jwt:
+  secret: "change-me-in-production-please-use-a-long-random-string"
+  expire_hours: 24
+
+log:
+  level: info                 # debug / info / warn / error
+  dir: "logs"
+  filename: "app.log"
+
+upload:
+  dir: "uploads"
+  max_size_mb: 20             # 单文件最大 20MB
