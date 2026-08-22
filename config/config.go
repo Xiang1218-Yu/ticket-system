@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/viper"
 )
@@ -52,7 +53,12 @@ func Load() (*Config, error) {
 	viper.AddConfigPath("../")
 	viper.AddConfigPath("../config")
 
+	// 配置键用点分隔嵌套（如 jwt.expire_hours），而环境变量规范形如
+	// TS_JWT_EXPIRE_HOURS。必须把点替换为下划线，AutomaticEnv 才能在
+	// os.LookupEnv 时命中真实变量；否则 viper 会去查找带点的非法变量名，
+	// 覆盖永远无法生效，导致“配置变了但会话寿命未变”的不一致。
 	viper.SetEnvPrefix("TS")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -67,6 +73,8 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
+// normalizeExpireHours 把过期小时数钳制到合法下界，保证签发的令牌至少有
+// 1 小时寿命。配置缺失/为 0/负值都收敛为 1，而非让上层减一后变成 0。
 func normalizeExpireHours(hours int) int {
 	if hours < 1 {
 		return 1

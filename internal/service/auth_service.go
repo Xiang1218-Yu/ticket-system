@@ -29,6 +29,13 @@ func NewAuthService(userRepo *repository.UserRepository, jwtSecret string, expir
 	}
 }
 
+// parseLeeway 是解析侧对过期/签发时刻的容忍量。
+// golang-jwt 默认 leeway=0，过期判定为 now < exp；当 now 恰好等于 exp（边界时刻）
+// 时会被判为已过期，导致“刚到点的会话仍被判失效、稍早一瞬的会话仍有效”的不一致。
+// 统一注入一个固定容差，使每个请求——无论新旧会话、无论配置是否刚变更——都按
+// “exp + leeway”一致地判定，避免边界抖动。容忍量刻意远小于最小寿命。
+const parseLeeway = 30 * time.Second
+
 // Claims 是 JWT 中携带的用户信息。
 type Claims struct {
 	UserID uint   `json:"uid"`
@@ -121,11 +128,16 @@ func (s *AuthService) issueToken(u *model.User) (string, error) {
 	return tok.SignedString(s.jwtSecret)
 }
 
+// tokenExpiry 计算令牌的绝对过期时刻：签发时刻 + 配置寿命。
+// 寿命直接取配置小时数，不得再减一——历史上这里的 (expireHours-1) 会让
+// 1 小时寿命收敛为 0、令牌签发即过期，且令所有寿命都偷短 1 小时。
 func (s *AuthService) tokenExpiry(now time.Time) time.Time {
-	return now.Add(time.Duration(s.expireHours-1) * time.Hour)
+	return now.Add(time.Duration(s.expireHours) * time.Hour)
 }
 
 // ParseToken 解析并校验 JWT，返回声明。
+// 校验顺序：签名方法 + 密钥（防伪）→ 声明时效（含 parseLeeway 一致容差）。
+// 不在此处放宽对“异常令牌”的处理：解析失败一律返回错误，由中间件拒绝。
 func (s *AuthService) ParseToken(tokenStr string) (*Claims, error) {
 	claims := &Claims{}
 	_, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
@@ -133,7 +145,7 @@ func (s *AuthService) ParseToken(tokenStr string) (*Claims, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
 		return s.jwtSecret, nil
-	})
+	}, jwt.WithLeeway(parseLeeway))
 	if err != nil {
 		return nil, err
 	}
