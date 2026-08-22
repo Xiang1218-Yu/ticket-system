@@ -31,7 +31,7 @@ func NewTicketRepository(db *gorm.DB) *TicketRepository {
 }
 
 func (r *TicketRepository) Create(t *model.Ticket) error {
-	return r.db.Create(t).Error
+	return r.db.Session(&gorm.Session{SkipDefaultTransaction: true}).Create(t).Error
 }
 
 func (r *TicketRepository) FindByID(id uint) (*model.Ticket, error) {

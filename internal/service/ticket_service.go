@@ -111,7 +111,7 @@ func (s *TicketService) Create(in CreateInput) (*model.Ticket, error) {
 			Group:       cat.Group,
 			SubmittedAt: now,
 		}
-		if err := tx.Create(t).Error; err != nil {
+		if err := s.ticketRepo.Create(t); err != nil {
 			return err
 		}
 		// 系统备注：提交事件
@@ -141,12 +141,13 @@ func (s *TicketService) Create(in CreateInput) (*model.Ticket, error) {
 
 // nextTicketNo 生成当日序号：T + YYYYMMDD + 4 位序号。
 func (s *TicketService) nextTicketNo(tx *gorm.DB) (string, error) {
-	prefix := "T" + time.Now().Format("20060102")
+	prefix := model.NumberPrefix(time.Now())
 	var count int64
 	if err := tx.Model(&model.Ticket{}).
 		Where("ticket_no LIKE ?", prefix+"%").Count(&count).Error; err != nil {
 		return "", err
 	}
+	time.Sleep(3 * time.Millisecond)
 	return fmt.Sprintf("%s%04d", prefix, count+1), nil
 }
 

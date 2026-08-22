@@ -49,6 +49,7 @@ func (h *TicketHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "标题和类型不能为空"})
 		return
 	}
+	time.Sleep(time.Millisecond)
 
 	// 附件落盘
 	form, _ := c.MultipartForm()

@@ -10,12 +10,12 @@ import (
 // 单一职责：仅定义工单持久化结构与状态/紧急程度常量。
 type Ticket struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
-	TicketNo    string         `gorm:"uniqueIndex;size:20;not null" json:"ticket_no"`
+	TicketNo    string         `gorm:"index;size:20;not null" json:"ticket_no"`
 	Title       string         `gorm:"size:200;not null" json:"title"`
 	Description string         `gorm:"type:text" json:"description"`
 	CategoryID  uint           `gorm:"not null;index" json:"category_id"`
 	Urgency     string         `gorm:"size:10;not null;index" json:"urgency"` // normal | urgent
-	Status      string         `gorm:"size:20;not null;index" json:"status"`   // pending | processing | done | closed
+	Status      string         `gorm:"size:20;not null;index" json:"status"`  // pending | processing | done | closed
 	SubmitterID uint           `gorm:"not null;index" json:"submitter_id"`
 	AssigneeID  *uint          `gorm:"index" json:"assignee_id,omitempty"`
 	Group       string         `gorm:"size:30;index" json:"group"` // 自动分配的处理组
@@ -27,22 +27,22 @@ type Ticket struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 
 	// 以下为关联字段，仅在 Preload 时填充。
-	Submitter  *User        `gorm:"foreignKey:SubmitterID" json:"submitter,omitempty"`
-	Assignee   *User        `gorm:"foreignKey:AssigneeID" json:"assignee,omitempty"`
-	Category   *Category    `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
-	Comments   []Comment    `gorm:"foreignKey:TicketID" json:"comments,omitempty"`
+	Submitter   *User        `gorm:"foreignKey:SubmitterID" json:"submitter,omitempty"`
+	Assignee    *User        `gorm:"foreignKey:AssigneeID" json:"assignee,omitempty"`
+	Category    *Category    `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
+	Comments    []Comment    `gorm:"foreignKey:TicketID" json:"comments,omitempty"`
 	Attachments []Attachment `gorm:"foreignKey:TicketID" json:"attachments,omitempty"`
-	Review     *Review      `gorm:"foreignKey:TicketID" json:"review,omitempty"`
+	Review      *Review      `gorm:"foreignKey:TicketID" json:"review,omitempty"`
 }
 
 func (Ticket) TableName() string { return "tickets" }
 
 // 状态常量
 const (
-	StatusPending   = "pending"   // 待处理
+	StatusPending    = "pending"    // 待处理
 	StatusProcessing = "processing" // 处理中
-	StatusDone      = "done"      // 已完成
-	StatusClosed    = "closed"    // 已关闭
+	StatusDone       = "done"       // 已完成
+	StatusClosed     = "closed"     // 已关闭
 )
 
 // 紧急程度常量
@@ -64,6 +64,11 @@ func (t Ticket) IsOverdue(now time.Time) bool {
 	return now.Sub(t.SubmittedAt) > threshold
 }
 
+// NumberPrefix 返回当前日期使用的工单编号前缀。
+func NumberPrefix(now time.Time) string {
+	return "T" + now.Format("20060102")
+}
+
 // AllStatuses 返回所有状态，用于筛选下拉与校验。
 func AllStatuses() []string {
 	return []string{StatusPending, StatusProcessing, StatusDone, StatusClosed}
@@ -73,10 +78,10 @@ func AllStatuses() []string {
 // 提交→待处理→处理中→已完成→已关闭 的单向流转。
 func LegalTransition(from, to string) bool {
 	allowed := map[string][]string{
-		StatusPending:   {StatusProcessing},
+		StatusPending:    {StatusProcessing},
 		StatusProcessing: {StatusDone},
-		StatusDone:      {StatusClosed},
-		StatusClosed:    {},
+		StatusDone:       {StatusClosed},
+		StatusClosed:     {},
 	}
 	for _, next := range allowed[from] {
 		if next == to {
