@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>所有工单 - 工单系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <div class="container">
+    <div class="card">
+      <h2 class="card-title">所有工单</h2>
+      <div class="filter-bar">
+        <input class="form-control search" id="search" placeholder="搜索编号/标题/提交人" />
+        <select class="form-control" id="status">
+          <option value="">全部状态</option>
+          <option value="pending">待处理</option>
+          <option value="processing">处理中</option>
+          <option value="done">已完成</option>
+          <option value="closed">已关闭</option>
+        </select>
+        <select class="form-control" id="category"></select>
+        <select class="form-control" id="urgency">
+          <option value="">全部紧急</option>
+          <option value="normal">普通</option>
+          <option value="urgent">紧急</option>
+        </select>
+        <button class="btn" id="searchBtn">查询</button>
+      </div>
+      <div id="listWrap"></div>
+    </div>
+  </div>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/ui.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/pages/tickets.js"></script>
+</body>
+</html>
